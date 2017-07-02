@@ -9,7 +9,7 @@ PARSE_CMD_BUILD_PKG = 'build'
 PARSE_CMD_DOWNLOAD_PKG = 'fetch'
 
 # FILES AND DIRS PATHS
-PATH_REPO_DIR = 'recipies'
+PATH_REPO_DIR = 'recipes'
 PATH_BUILD_BASE_DIR = 'build-base'
 PATH_TMP_DIR = 'tmp'
 PATH_RECIPE_FILE = 'recipe.yml'
