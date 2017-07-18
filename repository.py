@@ -84,10 +84,12 @@ class Repository:
 
         # Build subpackages
         subpackages_contents = pkg_obj.get_subpackages_contents()
+        subpackages_artifacts = pkg_obj.get_subpackages_artifacts()
         for subpackage_name in subpackages_contents:
             logging.info('Building subpackage '+subpackage_name+' from package '+pkg_name)
             img_name = image.get_package_image_name(pkg_name, subpackage_name)
             subpkg_contents = subpackages_contents[subpackage_name]
+            subpkg_artifacts = subpackages_artifacts[subpackage_name]
             df_filename = 'Dockerfile-'+img_name
             df_file = open(os.path.join(pkg_path, df_filename), 'w')
 
@@ -97,12 +99,22 @@ class Repository:
             tmp_contents_file.write("%s\n" % '\n'.join(subpkg_contents))
             tmp_contents_file.close()
 
+            # Writing subpackage files and dirs to file
+            tmp_artifacts_path = os.path.join(pkg_path, cst.PATH_TMP_ARTIFACTS_FILE)
+            tmp_artifacts_file = open(tmp_artifacts_path, "w")
+            tmp_artifacts_file.write("%s\n" % '\n'.join(subpkg_artifacts))
+            tmp_artifacts_file.close()
+
             # Build subpackage
-            pkg_obj.write_subpackage_dockerfile(df_file, subpkg_contents, subpackage_name)
+            is_subpkg = False
+            if subpkg_contents:
+                is_subpkg = True
+            pkg_obj.write_subpackage_dockerfile(df_file, is_subpkg, subpackage_name)
             image.build_docker_image(img_name, pkg_path, no_cache, df_filename, True)
 
-            # Delete tmp contents file
+            # Delete tmp files
             os.remove(tmp_contents_path)
+            os.remove(tmp_artifacts_path)
 
     def build_base(self, no_cache):
         logging.info('Building build base')

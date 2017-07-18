@@ -43,6 +43,12 @@ class Package:
         self.dependencies = recipe_file_contents.pop('dependencies', None)
         self.revision = recipe_file_contents.pop('revision', None)
 
+        self.release_date = recipe_file_contents.pop('release_date', None)
+        if not self.release_date:
+            logging.error('Package '+self.package_name+' does not provide release date. Stopping.')
+            sys.exit(1)
+        self.release_date = self.release_date.__format__('%Y%m%d%H%M')
+
         if self.variables:
             self.variables = {k: v for d in self.variables for k, v in d.items()}
 
@@ -178,17 +184,19 @@ class Package:
         # Packaging files
         self.write_df_base_part(image.get_package_image_name(self.package_name), build_files_stage_name)
         self.write_df_line('COPY '+cst.PATH_TMP_CONTENTS_FILE+' '+cst.PATH_TMP_CONTENTS_FILE)
-        self.write_df_line('RUN mkdir -p /release')
+        self.write_df_line('COPY '+cst.PATH_TMP_ARTIFACTS_FILE+' '+cst.PATH_TMP_ARTIFACTS_FILE)
+        self.write_df_line('RUN mkdir -p '+cst.RELEASE_DIRECTORY)
         if contents_list:
             if subpkg_name == 'bin':
                 # Try to strip binaries automatically
                 self.write_df_line('RUN while read p; do strip "$p" || true; done < '+cst.PATH_TMP_CONTENTS_FILE)
-            self.write_df_line('RUN while read p; do cp --parents -r "$p" /release; done < '+cst.PATH_TMP_CONTENTS_FILE)
+            self.write_df_line('RUN while read p; do cp --parents -r "$p" '+cst.RELEASE_DIRECTORY+'; done < '+cst.PATH_TMP_CONTENTS_FILE)
+            self.write_df_line('RUN while read p; do touch -t '+self.release_date+' "$p"; done < '+cst.PATH_TMP_ARTIFACTS_FILE)
         self.write_df_line('RUN rm '+cst.PATH_TMP_CONTENTS_FILE)
 
         # Releasing
         self.write_df_base_part('scratch')
-        self.write_df_line('COPY --from='+build_files_stage_name+' /release /')
+        self.write_df_line('COPY --from='+build_files_stage_name+' '+cst.RELEASE_DIRECTORY+' /')
         self.dockerfile.flush()
         self.dockerfile.close()
 
@@ -197,3 +205,15 @@ class Package:
 
     def get_subpackages_contents(self):
         return self.subpackages_contents
+
+    def get_subpackages_artifacts(self):
+        artifacts = {}
+        for key, files in self.subpackages_contents.iteritems():
+            artifacts[key] = map(lambda x: cst.RELEASE_DIRECTORY + x, self.subpackages_contents[key])
+            for f in files:
+                dirname = cst.RELEASE_DIRECTORY + os.path.dirname(f)
+                while dirname != '/':
+                    if not dirname in artifacts[key]:
+                        artifacts[key].append(dirname)
+                    dirname = os.path.dirname(dirname)
+        return artifacts

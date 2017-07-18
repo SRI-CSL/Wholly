@@ -16,3 +16,7 @@ PATH_RECIPE_FILE = 'recipe.yml'
 PATH_CONTENTS_FILE = 'contents.yml'
 PATH_RES_DIR = 'resources'
 PATH_TMP_CONTENTS_FILE = 'contents.tmp'
+PATH_TMP_ARTIFACTS_FILE = 'artifacts.tmp'
+
+# CONTAINER CONFIG
+RELEASE_DIRECTORY = '/release'
