@@ -27,17 +27,7 @@ def main():
 
     # Handling cases
     cmd = args['command']
-    if cmd == cst.PARSE_CMD_INIT_WORKDIR:
-        # TODO
-        logging.error("The '"+cst.PARSE_CMD_INIT_WORKDIR+"' command is not implemented yet. The config file '"
-                        + cst.PATH_CONFIG_FILE
-                        + "' has to be written manually.")
-    elif cmd == cst.PARSE_CMD_DOWNLOAD_REPO:
-        # TODO
-        logging.error("The '"+cst.PARSE_CMD_DOWNLOAD_REPO+"' command is not implemented yet. The repo directory '"
-                        + cst.PATH_REPO_DIR
-                        + "' has to be populated manually.")
-    elif cmd == cst.PARSE_CMD_BUILD_PKG:
+    if cmd == cst.PARSE_CMD_BUILD_PKG:
         logging.info('Resolving dependencies')
         packages_to_build = repo.resolve_build_dependencies(args['pkg_name'])
 
@@ -45,10 +35,10 @@ def main():
         create_dirs()
         repo.build_base(args['no_cache'])
         for pkg in packages_to_build:
-            repo.build_images(pkg, args['no_cache'])
-    elif cmd == cst.PARSE_CMD_DOWNLOAD_PKG:
-        # TODO
-        logging.error("The '"+cst.PARSE_CMD_DOWNLOAD_PKG+"' command is not implemented yet.")
+            commit_mode = args['commit_all']
+            if pkg.get_package_name() == args['pkg_name'] and args['commit']:
+                commit_mode = True
+            repo.build_images(pkg, args['no_cache'], commit_mode)
     else:
         logging.error("Unknown command '"
                         + cmd

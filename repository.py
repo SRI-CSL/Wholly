@@ -3,6 +3,8 @@ import sys
 import logging
 import image
 
+import yaml
+
 import constants as cst
 from package import Package
 
@@ -22,15 +24,29 @@ class Repository:
             graph[pkg_name] = []
             pkg_deps = pkg.get_build_dependencies()
             if pkg_deps:
-                for dep_pkg_name in pkg_deps:
+                for dep_pkg_name in pkg_deps.keys():
+                    deps_subpkgs = pkg_deps[dep_pkg_name]
                     if dep_pkg_name in pkg_map:
                         dep_pkg = pkg_map[dep_pkg_name]
                     else:
                         dep_pkg = self.get_package_obj(dep_pkg_name)
                         pkg_map[dep_pkg_name] = dep_pkg
-                    if not dep_pkg_name in todo:
-                        todo.append(dep_pkg_name)
-                    graph[pkg_name].append(dep_pkg_name)
+
+                    # Check dep subpackages
+                    rebuild_dep = False
+                    for dep_sub in deps_subpkgs:
+                        img_name = image.get_package_image_name(dep_pkg_name, dep_sub)
+                        subpackages_contents = dep_pkg.get_subpackages_contents()
+                        contents_file_hash = subpackages_contents[dep_sub]['checksum']
+                        real_img_hash = image.get_subpkg_hash(img_name)
+                        if contents_file_hash != real_img_hash:
+                            rebuild_dep = True
+
+                    # Add dependency to graph if needed
+                    if rebuild_dep:
+                        if not dep_pkg_name in todo:
+                            todo.append(dep_pkg_name)
+                        graph[pkg_name].append(dep_pkg_name)
         return (graph, pkg_map)
 
     def remove_dependency_graph_node(self, pkg_id, dependency_graph):
@@ -71,7 +87,7 @@ class Repository:
             logging.error('The package '+pkg_name+' was not found in the local repository. Aborting.')
             sys.exit(1)
 
-    def build_images(self, pkg_obj, no_cache):
+    def build_images(self, pkg_obj, no_cache, commit_mode):
         pkg_name = pkg_obj.get_package_name()
         pkg_path = os.path.join(cst.PATH_REPO_DIR, pkg_name)
         # Build package
@@ -83,13 +99,13 @@ class Repository:
         image.build_docker_image(img_name, pkg_path, no_cache, df_filename, True)
 
         # Build subpackages
+        is_err = False
+        is_change = False
         subpackages_contents = pkg_obj.get_subpackages_contents()
-        subpackages_artifacts = pkg_obj.get_subpackages_artifacts()
         for subpackage_name in subpackages_contents:
             logging.info('Building subpackage '+subpackage_name+' from package '+pkg_name)
             img_name = image.get_package_image_name(pkg_name, subpackage_name)
-            subpkg_contents = subpackages_contents[subpackage_name]
-            subpkg_artifacts = subpackages_artifacts[subpackage_name]
+            subpkg_contents = subpackages_contents[subpackage_name]['files']
             df_filename = 'Dockerfile-'+img_name
             df_file = open(os.path.join(pkg_path, df_filename), 'w')
 
@@ -98,12 +114,6 @@ class Repository:
             tmp_contents_file = open(tmp_contents_path, "w")
             tmp_contents_file.write("%s\n" % '\n'.join(subpkg_contents))
             tmp_contents_file.close()
-
-            # Writing subpackage files and dirs to file
-            tmp_artifacts_path = os.path.join(pkg_path, cst.PATH_TMP_ARTIFACTS_FILE)
-            tmp_artifacts_file = open(tmp_artifacts_path, "w")
-            tmp_artifacts_file.write("%s\n" % '\n'.join(subpkg_artifacts))
-            tmp_artifacts_file.close()
 
             # Build subpackage
             is_subpkg = False
@@ -114,7 +124,34 @@ class Repository:
 
             # Delete tmp files
             os.remove(tmp_contents_path)
-            os.remove(tmp_artifacts_path)
+
+            # Check hashes
+            contents_file_hash = subpackages_contents[subpackage_name]['checksum']
+            real_img_hash = image.get_subpkg_hash(img_name)
+            if contents_file_hash != real_img_hash:
+                if not commit_mode:
+                    is_err = True
+                    logging.error('Checksum for built subpackage does not match expected checksum.')
+                    logging.error('Built: '+real_img_hash)
+                    logging.error('Expected: '+contents_file_hash)
+                else:
+                    is_change = True
+                    logging.info('Commiting checksum change in subpackage.')
+                    logging.info('Old: '+contents_file_hash)
+                    logging.info('New: '+real_img_hash)
+                    subpackages_contents[subpackage_name]['checksum'] = real_img_hash
+
+        if is_err:
+            logging.error('There was an error building the subpackages. Stopping.')
+            sys.exit(1)
+
+        if is_change:
+            logging.info('Writing checksum changes in contents file.')
+            contents_file_path = os.path.join(pkg_path, cst.PATH_CONTENTS_FILE)
+            contents_file = open(contents_file_path, 'w')
+            contents_dump = yaml.dump(subpackages_contents, contents_file, default_flow_style=False, indent=4)
+            contents_file.close()
+
 
     def build_base(self, no_cache):
         logging.info('Building build base')

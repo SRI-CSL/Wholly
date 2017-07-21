@@ -30,6 +30,14 @@ class Package:
         self.parse_recipe_file(yaml.load(recipe_file_contents))
         if contents_file_contents:
             self.subpackages_contents = yaml.load(contents_file_contents)
+            for k in self.subpackages_contents:
+                if isinstance(self.subpackages_contents[k], list):
+                    self.subpackages_contents[k] = {
+                        'files': self.subpackages_contents[k],
+                        'checksum': 'none'
+                    }
+                else:
+                    self.subpackages_contents[k]['checksum'] = self.subpackages_contents[k].pop('checksum', 'No checksum provided')
         else:
             self.subpackages_contents = {}
         self.dockerfile = None
@@ -40,7 +48,7 @@ class Package:
         self.resources = recipe_file_contents.pop('resources', None)
         self.prepare_commands = recipe_file_contents.pop('prepare', None)
         self.build_commands = recipe_file_contents.pop('build', None)
-        self.dependencies = recipe_file_contents.pop('dependencies', None)
+        self.dependencies = recipe_file_contents.pop('dependencies', {})
         self.revision = recipe_file_contents.pop('revision', None)
 
         self.release_date = recipe_file_contents.pop('release_date', None)
@@ -59,10 +67,7 @@ class Package:
         self.variables['__NB_CORES__'] = self.args['nb_cores']
 
     def get_build_dependencies(self):
-        if self.dependencies:
-            return self.dependencies.keys()
-        else:
-            return []
+        return self.dependencies
 
     def write_df_line(self, str):
         self.dockerfile.write(str + '\n')
@@ -184,14 +189,13 @@ class Package:
         # Packaging files
         self.write_df_base_part(image.get_package_image_name(self.package_name), build_files_stage_name)
         self.write_df_line('COPY '+cst.PATH_TMP_CONTENTS_FILE+' '+cst.PATH_TMP_CONTENTS_FILE)
-        self.write_df_line('COPY '+cst.PATH_TMP_ARTIFACTS_FILE+' '+cst.PATH_TMP_ARTIFACTS_FILE)
         self.write_df_line('RUN mkdir -p '+cst.RELEASE_DIRECTORY)
         if contents_list:
             if subpkg_name == 'bin':
                 # Try to strip binaries automatically
                 self.write_df_line('RUN while read p; do strip "$p" || true; done < '+cst.PATH_TMP_CONTENTS_FILE)
             self.write_df_line('RUN while read p; do cp --parents -r "$p" '+cst.RELEASE_DIRECTORY+'; done < '+cst.PATH_TMP_CONTENTS_FILE)
-            self.write_df_line('RUN while read p; do touch -t '+self.release_date+' "$p"; done < '+cst.PATH_TMP_ARTIFACTS_FILE)
+            self.write_df_line('RUN find '+cst.RELEASE_DIRECTORY+' -exec touch -h -t '+self.release_date+' {} \;')
         self.write_df_line('RUN rm '+cst.PATH_TMP_CONTENTS_FILE)
 
         # Releasing
@@ -205,15 +209,3 @@ class Package:
 
     def get_subpackages_contents(self):
         return self.subpackages_contents
-
-    def get_subpackages_artifacts(self):
-        artifacts = {}
-        for key, files in self.subpackages_contents.iteritems():
-            artifacts[key] = map(lambda x: cst.RELEASE_DIRECTORY + x, self.subpackages_contents[key])
-            for f in files:
-                dirname = cst.RELEASE_DIRECTORY + os.path.dirname(f)
-                while dirname != '/':
-                    if not dirname in artifacts[key]:
-                        artifacts[key].append(dirname)
-                    dirname = os.path.dirname(dirname)
-        return artifacts

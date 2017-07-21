@@ -3,6 +3,7 @@ import os
 import subprocess
 import shutil
 import logging
+import json
 
 import constants as cst
 
@@ -41,3 +42,14 @@ def build_docker_image(img_name, working_dir, no_cache, df_filename, b_move_dock
     if not ret == 0:
         logging.error('Building package ' + img_name + ' failed. Stopping.')
         sys.exit(1)
+
+def get_subpkg_hash(img_name):
+    req_cmd = 'docker inspect --format=\'{{json .RootFS.Layers}}\' ' + img_name
+    try:
+        ret = subprocess.check_output(
+            req_cmd,
+            shell=True)
+        ret = json.loads(ret)
+        return str(ret[0])
+    except subprocess.CalledProcessError:
+        return 'No image found locally'
