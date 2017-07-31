@@ -20,21 +20,21 @@ We provide such an example working directory that is suitable to build packages 
 In order to build packages with Wholly, you need to clone both the tool and a working directory. Let us assume that you want to clone them side by side:
 
 ```
-git clone git@gitlab.com:loicg/wholly.git
-git clone git@gitlab.com:loicg/wholly-workdir.git
+git clone git@github.com:SRI-CSL/Wholly.git
+git clone git@github.com:SRI-CSL/WhollyRecipes.git
 ```
 
 ### Usage
 
 We need to execute *Wholly!* from the working directory:
 ```
-cd wholly-workdir
+cd WhollyRecipes
 ```
 
 You can now build any package present into the working directory:
 
 ```
-./../wholly.py build sqlite-3.18
+./../Wholly/wholly.py build sqlite-3.18
 ```
 This will build `sqlite-3.18` along with its dependencies. In particular, it will generate sub-packages for `sqlite-3.18`, in the form of Docker images:
 
@@ -48,4 +48,4 @@ wholly-sqlite-3.18-bin        latest        1.24MB
 ### Useful options
 
 - The `--no-cache` flag forces Docker to rebuild the packages.
-- The `--nb-cores` flag is useful for some packages that support concurrent builds. The command `./../wholly.py build libcxx-4.0 --nb-cores 4`, for example, will build the package `libcxx-4.0` using 4 cores. Of course, the number of cores that you specify cannot be greater than the number of cores that you allocated to your Docker machine.
+- The `--nb-cores` flag is useful for some packages that support concurrent builds. The command `./../Wholly/wholly.py build libcxx-4.0 --nb-cores 4`, for example, will build the package `libcxx-4.0` using 4 cores. Of course, the number of cores that you specify cannot be greater than the number of cores that you allocated to your Docker machine.
