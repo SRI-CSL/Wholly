@@ -20,8 +20,8 @@ We provide such an example working directory that is suitable to build packages 
 In order to build packages with Wholly, you need to clone both the tool and a working directory. Let us assume that you want to clone them side by side:
 
 ```
-git clone git@github.com:SRI-CSL/Wholly.git
-git clone git@github.com:SRI-CSL/WhollyRecipes.git
+git clone https://github.com/SRI-CSL/Wholly.git
+git clone https://github.com/SRI-CSL/WhollyRecipes.git
 ```
 
 ### Usage
