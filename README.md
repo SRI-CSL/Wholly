@@ -12,7 +12,7 @@ We provide such an example working directory that is suitable to build packages 
 
 ### Requirements
 
-- Python 2.7.x
+- Python 2.7.x with `pip`
 - Docker CE >= 17.05: https://www.docker.com/community-edition
 
 ### Fetch the project
@@ -24,6 +24,14 @@ git clone https://github.com/SRI-CSL/Wholly.git
 git clone https://github.com/SRI-CSL/WhollyRecipes.git
 ```
 
+### Install PyYAML
+
+PyYAML is a dependency for *Wholly!*. Install it by executing:
+
+```
+pip install pyyaml
+```
+
 ### Usage
 
 We need to execute *Wholly!* from the working directory:
@@ -31,10 +39,10 @@ We need to execute *Wholly!* from the working directory:
 cd WhollyRecipes
 ```
 
-You can now build any package present into the working directory:
+Make sure that the Docker deamon is running by executing the Docker application. You can now build any package present into the working directory:
 
 ```
-./../Wholly/wholly.py build sqlite-3.18
+../Wholly/wholly.py build sqlite-3.18
 ```
 This will build `sqlite-3.18` along with its dependencies. In particular, it will generate sub-packages for `sqlite-3.18`, in the form of Docker images:
 
@@ -48,4 +56,4 @@ wholly-sqlite-3.18-bin        latest        1.24MB
 ### Useful options
 
 - The `--no-cache` flag forces Docker to rebuild the packages.
-- The `--nb-cores` flag is useful for some packages that support concurrent builds. The command `./../Wholly/wholly.py build libcxx-4.0 --nb-cores 4`, for example, will build the package `libcxx-4.0` using 4 cores. Of course, the number of cores that you specify cannot be greater than the number of cores that you allocated to your Docker machine.
+- The `--nb-cores` flag is useful for some packages that support concurrent builds. The command `../Wholly/wholly.py build libcxx-4.0 --nb-cores 4`, for example, will build the package `libcxx-4.0` using 4 cores. Of course, the number of cores that you specify cannot be greater than the number of cores that you allocated to your Docker machine.
