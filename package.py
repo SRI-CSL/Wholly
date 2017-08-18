@@ -145,15 +145,15 @@ class Package:
             self.write_df_line('RUN git clone ' + repo_src + ' ' + source_dir)
         elif 'tar.gz' in self.source:
             tar_src = self.source['tar.gz'].format(**self.variables)
-            self.write_df_line('RUN curl "' + tar_src + '" -o src.tar.gz')
+            self.write_df_line('RUN curl -L "' + tar_src + '" -o src.tar.gz')
             self.write_df_line('RUN mkdir ' + source_dir + ' && tar xf src.tar.gz -C ' + source_dir + ' --strip-components 1')
         elif 'tar.bz2' in self.source:
             tar_src = self.source['tar.bz2'].format(**self.variables)
-            self.write_df_line('RUN curl "' + tar_src + '" -o src.tar.bz2')
+            self.write_df_line('RUN curl -L "' + tar_src + '" -o src.tar.bz2')
             self.write_df_line('RUN mkdir ' + source_dir + ' && tar xf src.tar.bz2 -C ' + source_dir + ' --strip-components 1')
         elif 'tgz' in self.source:
             tar_src = self.source['tgz'].format(**self.variables)
-            self.write_df_line('RUN curl "' + tar_src + '" -o src.tgz')
+            self.write_df_line('RUN curl -L "' + tar_src + '" -o src.tgz')
             self.write_df_line('RUN mkdir ' + source_dir + ' && tar xf src.tgz -C ' + source_dir + ' --strip-components 1')
         self.write_df_newline()
 
