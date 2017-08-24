@@ -43,9 +43,9 @@ def build_docker_image(img_name, working_dir, no_cache, df_filename, b_move_dock
         shutil.move(src_df_path, dest_df_path)
     logFile.flush()
     logFile.close()
-    if not ret == 0:
-        logger.error('Building package {0} failed. Stopping.'.format(img_name))
-        logger.error('See {0} for more details.'.format(logPath))
+    if ret != 0:
+        logger.error('Building package %s failed. Stopping.', img_name)
+        logger.error('See %s for more details.', logPath)
         sys.exit(1)
 
 def get_subpkg_hash(img_name):

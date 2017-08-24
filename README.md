@@ -83,4 +83,13 @@ For example:
     export WHOLLY_LOG_FILE=/tmp/wholly.log
 ```
 
-When the level is set to `DEBUG` the messages contain for locality information.
+When the level is set to `DEBUG` the messages contain more locality information.
+
+
+###  Checksum Mismatches
+
+If one is building a package and one discovers that the checksums do not match, you can either:
+
+- Use the `--commit-all` command switch, which will replace the old checksums by the new ones.
+
+- Use the `ignore-checksums` command switch, which will simply igmore the mismatches (while still reporting them).

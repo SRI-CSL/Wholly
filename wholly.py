@@ -18,7 +18,7 @@ def create_dirs():
 
 def main():
 
-    logger.info('Starting '+cst.TOOL_NAME)
+    logger.info('Starting %s', cst.TOOL_NAME)
 
     # Parsing from cli
     args = parser.parse_from_command_line()
@@ -37,11 +37,12 @@ def main():
         repo.build_base(args['no_cache'])
         for pkg in packages_to_build:
             commit_mode = args['commit_all']
+            tolerant = args['ignore_checksums']
             if pkg.get_package_name() == args['pkg_name'] and args['commit']:
                 commit_mode = True
-            repo.build_images(pkg, args['no_cache'], commit_mode)
+            repo.build_images(pkg, args['no_cache'], commit_mode, tolerant)
     else:
-        logger.error("Unknown command '{0}'. Stopping {1}.".format(cmd, cst.TOOL_NAME))
+        logger.error("Unknown command '%s'. Stopping %s.", cmd, cst.TOOL_NAME)
 
     return 0
 

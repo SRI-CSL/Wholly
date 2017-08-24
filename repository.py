@@ -12,7 +12,7 @@ from logconfig import logConfig
 
 logger = logConfig(__name__)
 
-class Repository:
+class Repository(object):
     def __init__(self, args):
         self.args = args
 
@@ -60,7 +60,7 @@ class Repository:
         (dependency_graph, pkg_map) = self.build_dependency_graph(target_pkg_name)
         dependency_pkg_lst = []
         nb_deps = len(dependency_graph.keys())
-        while (nb_deps > 0):
+        while nb_deps > 0:
             for pkg_id, pkg_deps in dependency_graph.items():
                 if not pkg_deps:
                     dependency_pkg_lst.append(pkg_map[pkg_id])
@@ -88,14 +88,14 @@ class Repository:
                 contents_file_contents = None
             return Package(pkg_name, recipe_file_contents, contents_file_contents, self.args)
         else:
-            logger.error('The package {0} was not found in the local repository. Aborting.'.format(pkg_name))
+            logger.error('The package %s was not found in the local repository. Aborting.', pkg_name)
             sys.exit(1)
 
-    def build_images(self, pkg_obj, no_cache, commit_mode):
+    def build_images(self, pkg_obj, no_cache, commit_mode, tolerant):
         pkg_name = pkg_obj.get_package_name()
         pkg_path = os.path.join(cst.PATH_REPO_DIR, pkg_name)
         # Build package
-        logger.info('Building package {0}'.format(pkg_name))
+        logger.info('Building package %s', pkg_name)
         img_name = image.get_package_image_name(pkg_name)
         df_filename = 'Dockerfile-'+img_name
         df_file = open(os.path.join(pkg_path, df_filename), 'w')
@@ -107,7 +107,7 @@ class Repository:
         is_change = False
         subpackages_contents = pkg_obj.get_subpackages_contents()
         for subpackage_name in subpackages_contents:
-            logger.info('Building subpackage {0} from package {1}'.format(subpackage_name, pkg_name))
+            logger.info('Building subpackage %s from package %s', subpackage_name, pkg_name)
             img_name = image.get_package_image_name(pkg_name, subpackage_name)
             subpkg_contents = subpackages_contents[subpackage_name]['files']
             df_filename = 'Dockerfile-'+img_name
@@ -134,13 +134,17 @@ class Repository:
             real_img_hash = image.get_subpkg_hash(img_name)
             if contents_file_hash != real_img_hash:
                 if not commit_mode:
-                    is_err = True
-                    logger.error('Checksum for built subpackage does not match expected checksum.')
-                    logger.error('\n\tBuilt: {0}\n\tExpected: {1}'.format(real_img_hash, contents_file_hash))
+                    if not tolerant:
+                        is_err = True
+                        squark = logger.error
+                    else:
+                        squark = logger.info
+                    squark('Checksum for built subpackage does not match expected checksum.')
+                    squark('\n\tBuilt: %s\n\tExpected: %s', real_img_hash, contents_file_hash)
                 else:
                     is_change = True
                     logger.info('Commiting checksum change in subpackage.')
-                    logger.info('\n\tOld: {0}\n\tNew: {1}'.format(contents_file_hash, real_img_hash))
+                    logger.info('\n\tOld: %s\n\tNew: %s', contents_file_hash, real_img_hash)
                     subpackages_contents[subpackage_name]['checksum'] = real_img_hash
 
         if is_err:
@@ -151,7 +155,7 @@ class Repository:
             logger.info('Writing checksum changes in contents file.')
             contents_file_path = os.path.join(pkg_path, cst.PATH_CONTENTS_FILE)
             contents_file = open(contents_file_path, 'w')
-            contents_dump = yaml.dump(subpackages_contents, contents_file, default_flow_style=False, indent=4)
+            yaml.dump(subpackages_contents, contents_file, default_flow_style=False, indent=4)
             contents_file.close()
 
 
@@ -162,5 +166,5 @@ class Repository:
             img_name = image.get_base_image_name()
             image.build_docker_image(img_name, cst.PATH_BUILD_BASE_DIR, no_cache, 'Dockerfile', False)
         else:
-            logger.error('No Dockerfile found into the {0} directory. Aborting.'.format(cst.PATH_BUILD_BASE_DIR))
+            logger.error('No Dockerfile found into the %s directory. Aborting.', cst.PATH_BUILD_BASE_DIR)
             sys.exit(1)

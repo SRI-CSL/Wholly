@@ -1,9 +1,5 @@
-# TODO: Check imports
-
 import os
 import sys
-import urlparse
-import posixpath
 import yaml
 
 import image
@@ -18,7 +14,7 @@ logger = logConfig(__name__)
 #from pykwalify.core import Core
 #from pykwalify.errors import PyKwalifyException
 
-class Package:
+class Package(object):
     def __init__(self, package_name, recipe_file_contents, contents_file_contents, args):
         # TODO: Validate package yaml file against schema
         #try:
@@ -73,8 +69,8 @@ class Package:
     def get_build_dependencies(self):
         return self.dependencies
 
-    def write_df_line(self, str):
-        self.dockerfile.write(str + '\n')
+    def write_df_line(self, strv):
+        self.dockerfile.write(strv + '\n')
 
     def write_df_newline(self):
         self.write_df_line('')
@@ -92,8 +88,8 @@ class Package:
                 else:
                     self.write_df_line('  ' + args[i] + ' ' + separator + ' \\')
 
-    def write_df_comment(self, str):
-        self.write_df_line('# ' + str)
+    def write_df_comment(self, strv):
+        self.write_df_line('# ' + strv)
 
     def write_df_base_part(self, img_name, stage_name=None):
         df_line = 'FROM ' + img_name
@@ -199,7 +195,7 @@ class Package:
                 # Try to strip binaries automatically
                 self.write_df_line('RUN while read p; do strip "$p" || true; done < '+cst.PATH_TMP_CONTENTS_FILE)
             self.write_df_line('RUN while read p; do cp --parents -r "$p" '+cst.RELEASE_DIRECTORY+'; done < '+cst.PATH_TMP_CONTENTS_FILE)
-            self.write_df_line('RUN find '+cst.RELEASE_DIRECTORY+' -exec touch -h -t '+self.release_date+' {} \;')
+            self.write_df_line('RUN find '+cst.RELEASE_DIRECTORY+' -exec touch -h -t '+self.release_date+r' {} \;')
         self.write_df_line('RUN rm '+cst.PATH_TMP_CONTENTS_FILE)
 
         # Releasing
