@@ -82,3 +82,5 @@ For example:
 ```
     export WHOLLY_LOG_FILE=/tmp/wholly.log
 ```
+
+When the level is set to `DEBUG` the messages contain for locality information.
