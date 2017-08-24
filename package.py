@@ -4,12 +4,16 @@ import os
 import sys
 import urlparse
 import posixpath
-import logging
-
 import yaml
 
 import image
 import constants as cst
+
+from logconfig import logConfig
+
+logger = logConfig(__name__)
+
+
 
 #from pykwalify.core import Core
 #from pykwalify.errors import PyKwalifyException
@@ -53,7 +57,7 @@ class Package:
 
         self.release_date = recipe_file_contents.pop('release_date', None)
         if not self.release_date:
-            logging.error('Package '+self.package_name+' does not provide release date. Stopping.')
+            logger.error('Package '+self.package_name+' does not provide release date. Stopping.')
             sys.exit(1)
         self.release_date = self.release_date.__format__('%Y%m%d%H%M')
 

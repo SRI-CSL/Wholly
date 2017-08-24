@@ -1,12 +1,16 @@
 import os
 import sys
-import logging
 import image
 
 import yaml
 
 import constants as cst
+
 from package import Package
+
+from logconfig import logConfig
+
+logger = logConfig(__name__)
 
 class Repository:
     def __init__(self, args):
@@ -64,7 +68,7 @@ class Repository:
                     dependency_graph = self.remove_dependency_graph_node(pkg_id, dependency_graph)
             new_nb_deps = len(dependency_graph.keys())
             if nb_deps == new_nb_deps:
-                logging.error('Could not resolve dependencies. There may be a directed cycle in the graph.')
+                logger.error('Could not resolve dependencies. There may be a directed cycle in the graph.')
                 sys.exit(1)
             else:
                 nb_deps = new_nb_deps
@@ -84,14 +88,14 @@ class Repository:
                 contents_file_contents = None
             return Package(pkg_name, recipe_file_contents, contents_file_contents, self.args)
         else:
-            logging.error('The package '+pkg_name+' was not found in the local repository. Aborting.')
+            logger.error('The package {0} was not found in the local repository. Aborting.'.format(pkg_name))
             sys.exit(1)
 
     def build_images(self, pkg_obj, no_cache, commit_mode):
         pkg_name = pkg_obj.get_package_name()
         pkg_path = os.path.join(cst.PATH_REPO_DIR, pkg_name)
         # Build package
-        logging.info('Building package '+pkg_name)
+        logger.info('Building package {0}'.format(pkg_name))
         img_name = image.get_package_image_name(pkg_name)
         df_filename = 'Dockerfile-'+img_name
         df_file = open(os.path.join(pkg_path, df_filename), 'w')
@@ -103,7 +107,7 @@ class Repository:
         is_change = False
         subpackages_contents = pkg_obj.get_subpackages_contents()
         for subpackage_name in subpackages_contents:
-            logging.info('Building subpackage '+subpackage_name+' from package '+pkg_name)
+            logger.info('Building subpackage {0} from package {1}'.format(subpackage_name, pkg_name))
             img_name = image.get_package_image_name(pkg_name, subpackage_name)
             subpkg_contents = subpackages_contents[subpackage_name]['files']
             df_filename = 'Dockerfile-'+img_name
@@ -131,22 +135,20 @@ class Repository:
             if contents_file_hash != real_img_hash:
                 if not commit_mode:
                     is_err = True
-                    logging.error('Checksum for built subpackage does not match expected checksum.')
-                    logging.error('Built: '+real_img_hash)
-                    logging.error('Expected: '+contents_file_hash)
+                    logger.error('Checksum for built subpackage does not match expected checksum.')
+                    logger.error('\n\tBuilt: {0}\n\tExpected: {1}'.format(real_img_hash, contents_file_hash))
                 else:
                     is_change = True
-                    logging.info('Commiting checksum change in subpackage.')
-                    logging.info('Old: '+contents_file_hash)
-                    logging.info('New: '+real_img_hash)
+                    logger.info('Commiting checksum change in subpackage.')
+                    logger.info('\n\tOld: {0}\n\tNew: {1}'.format(contents_file_hash, real_img_hash))
                     subpackages_contents[subpackage_name]['checksum'] = real_img_hash
 
         if is_err:
-            logging.error('There was an error building the subpackages. Stopping.')
+            logger.error('There was an error building the subpackages. Stopping.')
             sys.exit(1)
 
         if is_change:
-            logging.info('Writing checksum changes in contents file.')
+            logger.info('Writing checksum changes in contents file.')
             contents_file_path = os.path.join(pkg_path, cst.PATH_CONTENTS_FILE)
             contents_file = open(contents_file_path, 'w')
             contents_dump = yaml.dump(subpackages_contents, contents_file, default_flow_style=False, indent=4)
@@ -154,11 +156,11 @@ class Repository:
 
 
     def build_base(self, no_cache):
-        logging.info('Building build base')
+        logger.info('Building build base')
         df_path = os.path.join(cst.PATH_BUILD_BASE_DIR, 'Dockerfile')
         if os.path.isfile(df_path):
             img_name = image.get_base_image_name()
             image.build_docker_image(img_name, cst.PATH_BUILD_BASE_DIR, no_cache, 'Dockerfile', False)
         else:
-            logging.error('No Dockerfile found into the '+cst.PATH_BUILD_BASE_DIR+' directory. Aborting.')
+            logger.error('No Dockerfile found into the {0} directory. Aborting.'.format(cst.PATH_BUILD_BASE_DIR))
             sys.exit(1)

@@ -2,10 +2,13 @@ import sys
 import os
 import subprocess
 import shutil
-import logging
 import json
 
 import constants as cst
+
+from logconfig import logConfig
+
+logger = logConfig(__name__)
 
 def get_base_image_name():
     return cst.TOOL_NAME+'-base-image'
@@ -22,7 +25,8 @@ def build_docker_image(img_name, working_dir, no_cache, df_filename, b_move_dock
     if no_cache:
         no_cache_arg = '--no-cache'
     build_cmd = 'docker build -t ' + img_name + ' . -f ' + df_filename + ' ' + no_cache_arg
-    logFile = open(os.path.join(cst.PATH_TMP_DIR, 'dockerbuild-'+img_name+'.log'), 'w')
+    logPath = os.path.abspath(os.path.join(cst.PATH_TMP_DIR, 'dockerbuild-'+img_name+'.log'))
+    logFile = open(logPath, 'w')
     logFile.write('\n*** INFO ***\n')
     logFile.write('Build command: ' + build_cmd)
     ret = subprocess.call(
@@ -40,7 +44,8 @@ def build_docker_image(img_name, working_dir, no_cache, df_filename, b_move_dock
     logFile.flush()
     logFile.close()
     if not ret == 0:
-        logging.error('Building package ' + img_name + ' failed. Stopping.')
+        logger.error('Building package {0} failed. Stopping.'.format(img_name))
+        logger.error('See {0} for more details.'.format(logPath))
         sys.exit(1)
 
 def get_subpkg_hash(img_name):

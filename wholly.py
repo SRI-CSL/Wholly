@@ -2,11 +2,13 @@
 import sys
 import os
 import shutil
-import logging
 
 import constants as cst
 from repository import Repository
 import parser
+from logconfig import logConfig
+
+logger = logConfig(__name__)
 
 def create_dirs():
     # Recreate tmpdir
@@ -15,9 +17,8 @@ def create_dirs():
     os.makedirs(cst.PATH_TMP_DIR)
 
 def main():
-    # Start logger
-    logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
-    logging.info('Starting '+cst.TOOL_NAME)
+
+    logger.info('Starting '+cst.TOOL_NAME)
 
     # Parsing from cli
     args = parser.parse_from_command_line()
@@ -28,7 +29,7 @@ def main():
     # Handling cases
     cmd = args['command']
     if cmd == cst.PARSE_CMD_BUILD_PKG:
-        logging.info('Resolving dependencies')
+        logger.info('Resolving dependencies')
         packages_to_build = repo.resolve_build_dependencies(args['pkg_name'])
 
         # Prepare useful dirs
@@ -40,9 +41,7 @@ def main():
                 commit_mode = True
             repo.build_images(pkg, args['no_cache'], commit_mode)
     else:
-        logging.error("Unknown command '"
-                        + cmd
-                        + "'. Stopping "+cst.TOOL_NAME+".")
+        logger.error("Unknown command '{0}'. Stopping {1}.".format(cmd, cst.TOOL_NAME))
 
     return 0
 

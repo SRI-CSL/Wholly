@@ -57,3 +57,28 @@ wholly-sqlite-3.18-bin        latest        1.24MB
 
 - The `--no-cache` flag forces Docker to rebuild the packages.
 - The `--nb-cores` flag is useful for some packages that support concurrent builds. The command `../Wholly/wholly.py build libcxx-4.0 --nb-cores 4`, for example, will build the package `libcxx-4.0` using 4 cores. Of course, the number of cores that you specify cannot be greater than the number of cores that you allocated to your Docker machine.
+
+
+
+### Debugging
+
+Wholly can show various levels of output to aid with debugging.
+To show this output set the `WHOLLY_LOG_LEVEL` environment
+variable to one of the following levels:
+
+ * `ERROR`
+ * `WARNING`
+ * `INFO`
+ * `DEBUG`
+
+For example:
+```
+    export WHOLLY_LOG_LEVEL=DEBUG
+```
+Output will be directed to the standard error stream, unless you specify the
+path of a logfile via the `WHOLLY_LOG_FILE` environment variable.
+
+For example:
+```
+    export WHOLLY_LOG_FILE=/tmp/wholly.log
+```
