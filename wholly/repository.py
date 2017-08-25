@@ -4,11 +4,14 @@ import image
 
 import yaml
 
-import constants as cst
+from .constants import PATH_REPO_DIR
+from .constants import PATH_RECIPE_FILE
+from .constants import PATH_CONTENTS_FILE
+from .constants import PATH_TMP_CONTENTS_FILE
+from .constants import PATH_BUILD_BASE_DIR
 
-from package import Package
-
-from logconfig import logConfig
+from .package import Package
+from .logconfig import logConfig
 
 logger = logConfig(__name__)
 
@@ -75,9 +78,9 @@ class Repository(object):
         return dependency_pkg_lst
 
     def get_package_obj(self, pkg_name):
-        pkg_path = os.path.join(cst.PATH_REPO_DIR, pkg_name)
-        recipe_file_path = os.path.join(pkg_path, cst.PATH_RECIPE_FILE)
-        contents_file_path = os.path.join(pkg_path, cst.PATH_CONTENTS_FILE)
+        pkg_path = os.path.join(PATH_REPO_DIR, pkg_name)
+        recipe_file_path = os.path.join(pkg_path, PATH_RECIPE_FILE)
+        contents_file_path = os.path.join(pkg_path, PATH_CONTENTS_FILE)
         if os.path.isfile(recipe_file_path):
             recipe_file_obj = open(recipe_file_path, 'r')
             recipe_file_contents = recipe_file_obj.read()
@@ -93,7 +96,7 @@ class Repository(object):
 
     def build_images(self, pkg_obj, no_cache, commit_mode, tolerant):
         pkg_name = pkg_obj.get_package_name()
-        pkg_path = os.path.join(cst.PATH_REPO_DIR, pkg_name)
+        pkg_path = os.path.join(PATH_REPO_DIR, pkg_name)
         # Build package
         logger.info('Building package %s', pkg_name)
         img_name = image.get_package_image_name(pkg_name)
@@ -114,7 +117,7 @@ class Repository(object):
             df_file = open(os.path.join(pkg_path, df_filename), 'w')
 
             # Writing subpackage contents to file
-            tmp_contents_path = os.path.join(pkg_path, cst.PATH_TMP_CONTENTS_FILE)
+            tmp_contents_path = os.path.join(pkg_path, PATH_TMP_CONTENTS_FILE)
             tmp_contents_file = open(tmp_contents_path, "w")
             tmp_contents_file.write("%s\n" % '\n'.join(subpkg_contents))
             tmp_contents_file.close()
@@ -153,7 +156,7 @@ class Repository(object):
 
         if is_change:
             logger.info('Writing checksum changes in contents file.')
-            contents_file_path = os.path.join(pkg_path, cst.PATH_CONTENTS_FILE)
+            contents_file_path = os.path.join(pkg_path, PATH_CONTENTS_FILE)
             contents_file = open(contents_file_path, 'w')
             yaml.dump(subpackages_contents, contents_file, default_flow_style=False, indent=4)
             contents_file.close()
@@ -161,10 +164,10 @@ class Repository(object):
 
     def build_base(self, no_cache):
         logger.info('Building build base')
-        df_path = os.path.join(cst.PATH_BUILD_BASE_DIR, 'Dockerfile')
+        df_path = os.path.join(PATH_BUILD_BASE_DIR, 'Dockerfile')
         if os.path.isfile(df_path):
             img_name = image.get_base_image_name()
-            image.build_docker_image(img_name, cst.PATH_BUILD_BASE_DIR, no_cache, 'Dockerfile', False)
+            image.build_docker_image(img_name, PATH_BUILD_BASE_DIR, no_cache, 'Dockerfile', False)
         else:
-            logger.error('No Dockerfile found into the %s directory. Aborting.', cst.PATH_BUILD_BASE_DIR)
+            logger.error('No Dockerfile found into the %s directory. Aborting.', PATH_BUILD_BASE_DIR)
             sys.exit(1)

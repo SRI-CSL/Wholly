@@ -1,5 +1,7 @@
 # Wholly!
 
+[![PyPI version](https://badge.fury.io/py/wholly.svg)](https://badge.fury.io/py/wholly)
+
 ## Overview
 
 This project, *Wholly!*, provides a Python tool that can build clean packages in a traceable way from open-source code. We make use of Docker containers to provide a minimal and controlled build environment, clear and meaningful build "recipes" to describe precisely the dependencies and the build invocations, and fine-grained sub-packaging to release lightweight and usable images.
@@ -15,21 +17,28 @@ We provide such an example working directory that is suitable to build packages 
 - Python 2.7.x with `pip`
 - Docker CE >= 17.05: https://www.docker.com/community-edition
 
-### Fetch the project
 
-In order to build packages with Wholly, you need to clone both the tool and a working directory. Let us assume that you want to clone them side by side:
+### Install
 
+You can install the latest published version via
+```
+pip install wholly
+```
+or you can check out the repository and install local development version
 ```
 git clone https://github.com/SRI-CSL/Wholly.git
+cd Wholly
+make develop
+```
+This last step may require `sudo`.
+
+
+### Fetch the Recipes
+
+Fetch the recipes:
+
+```
 git clone https://github.com/SRI-CSL/WhollyRecipes.git
-```
-
-### Install PyYAML
-
-PyYAML is a dependency for *Wholly!*. Install it by executing:
-
-```
-pip install pyyaml
 ```
 
 ### Usage
@@ -42,7 +51,7 @@ cd WhollyRecipes
 Make sure that the Docker deamon is running by executing the Docker application. You can now build any package present into the working directory:
 
 ```
-../Wholly/wholly.py build sqlite-3.18
+wholly build sqlite-3.18
 ```
 This will build `sqlite-3.18` along with its dependencies. In particular, it will generate sub-packages for `sqlite-3.18`, in the form of Docker images:
 

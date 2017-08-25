@@ -6,7 +6,7 @@ import json
 
 import constants as cst
 
-from logconfig import logConfig
+from .logconfig import logConfig
 
 logger = logConfig(__name__)
 

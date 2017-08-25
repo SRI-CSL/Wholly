@@ -6,13 +6,14 @@ import os
 import sys
 
 
-import constants as cst
+from .constants import LOG_LEVEL
+from .constants import LOG_FILE
 
 _validLogLevels = ['ERROR', 'WARNING', 'INFO', 'DEBUG']
 
 def logConfig(name):
 
-    destination = os.getenv(cst.LOG_FILE)
+    destination = os.getenv(LOG_FILE)
 
     if destination:
         logging.basicConfig(filename=destination, level=logging.WARNING, format='%(levelname)s:%(message)s')
@@ -22,12 +23,12 @@ def logConfig(name):
     retval = logging.getLogger(name)
 
     # ignore old setting
-    level = os.getenv(cst.LOG_LEVEL)
+    level = os.getenv(LOG_LEVEL)
 
     if level:
         level = level.upper()
         if not level in _validLogLevels:
-            logging.error('"%s" is not a valid value for %s. Valid values are %s', level, cst.LOG_LEVEL, _validLogLevels)
+            logging.error('"%s" is not a valid value for %s. Valid values are %s', level, LOG_LEVEL, _validLogLevels)
             sys.exit(1)
         else:
             retval.setLevel(getattr(logging, level))

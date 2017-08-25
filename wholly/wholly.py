@@ -1,34 +1,42 @@
 #!/usr/bin/env python
+"""The Wholly tool
+
+"""
+from __future__ import absolute_import
+
 import sys
 import os
 import shutil
 
-import constants as cst
-from repository import Repository
-import parser
-from logconfig import logConfig
+from .constants import PATH_TMP_DIR
+from .constants import TOOL_NAME
+from .constants import PARSE_CMD_BUILD_PKG
+
+from .repository import Repository
+from .parser import parse_from_command_line
+from .logconfig import logConfig
 
 logger = logConfig(__name__)
 
 def create_dirs():
     # Recreate tmpdir
-    if os.path.isdir(cst.PATH_TMP_DIR):
-        shutil.rmtree(cst.PATH_TMP_DIR)
-    os.makedirs(cst.PATH_TMP_DIR)
+    if os.path.isdir(PATH_TMP_DIR):
+        shutil.rmtree(PATH_TMP_DIR)
+    os.makedirs(PATH_TMP_DIR)
 
 def main():
 
-    logger.info('Starting %s', cst.TOOL_NAME)
+    logger.info('Starting %s', TOOL_NAME)
 
     # Parsing from cli
-    args = parser.parse_from_command_line()
+    args = parse_from_command_line()
 
     # Init repo
     repo = Repository(args)
 
     # Handling cases
     cmd = args['command']
-    if cmd == cst.PARSE_CMD_BUILD_PKG:
+    if cmd == PARSE_CMD_BUILD_PKG:
         logger.info('Resolving dependencies')
         packages_to_build = repo.resolve_build_dependencies(args['pkg_name'])
 
@@ -42,7 +50,7 @@ def main():
                 commit_mode = True
             repo.build_images(pkg, args['no_cache'], commit_mode, tolerant)
     else:
-        logger.error("Unknown command '%s'. Stopping %s.", cmd, cst.TOOL_NAME)
+        logger.error("Unknown command '%s'. Stopping %s.", cmd, TOOL_NAME)
 
     return 0
 

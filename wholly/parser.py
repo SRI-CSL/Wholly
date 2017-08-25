@@ -1,6 +1,9 @@
 import argparse
 
-import constants as cst
+
+from .constants import TOOL_NAME
+from .constants import PARSE_CMD_BUILD_PKG
+
 
 class ParserError(Exception):
     def __init__(self, msg):
@@ -10,10 +13,10 @@ class ParserError(Exception):
         return 'Parsing failed: ' + self.msg
 
 def parse_from_command_line():
-    parser = argparse.ArgumentParser(prog=cst.TOOL_NAME)
+    parser = argparse.ArgumentParser(prog=TOOL_NAME)
     subparsers = parser.add_subparsers(help='sub-command help', dest='command')
 
-    parser_cmd1 = subparsers.add_parser(cst.PARSE_CMD_BUILD_PKG, help=cst.PARSE_CMD_BUILD_PKG+" help")
+    parser_cmd1 = subparsers.add_parser(PARSE_CMD_BUILD_PKG, help=PARSE_CMD_BUILD_PKG+" help")
 
     parser_cmd1.add_argument(
         'pkg_name',

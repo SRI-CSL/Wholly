@@ -1,6 +1,5 @@
 # PROGRAM INFO
 TOOL_NAME = 'wholly'
-TOOL_VER = '1.0.0'
 
 # PARSING
 PARSE_CMD_BUILD_PKG = 'build'

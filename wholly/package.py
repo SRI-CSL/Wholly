@@ -2,10 +2,14 @@ import os
 import sys
 import yaml
 
-import image
-import constants as cst
+from .image import get_package_image_name
+from .image import get_base_image_name
 
-from logconfig import logConfig
+from .constants import PATH_RES_DIR
+from .constants import PATH_TMP_CONTENTS_FILE
+from .constants import RELEASE_DIRECTORY
+
+from .logconfig import logConfig
 
 logger = logConfig(__name__)
 
@@ -103,7 +107,7 @@ class Package(object):
             return
         for pkg_name in self.dependencies:
             for subpkg_name in self.dependencies[pkg_name]:
-                img_name = image.get_package_image_name(pkg_name, subpkg_name)
+                img_name = get_package_image_name(pkg_name, subpkg_name)
                 self.write_df_base_part(img_name, img_name+'-files')
 
     def write_df_bring_deps_files(self):
@@ -112,7 +116,7 @@ class Package(object):
         self.write_df_comment('Bringing dependencies in')
         for pkg_name in self.dependencies:
             for subpkg_name in self.dependencies[pkg_name]:
-                img_name = image.get_package_image_name(pkg_name, subpkg_name)
+                img_name = get_package_image_name(pkg_name, subpkg_name)
                 stage_name = img_name+'-files'
                 self.write_df_line('COPY --from='+stage_name+' / /')
         self.write_df_newline()
@@ -122,7 +126,7 @@ class Package(object):
             return
         self.write_df_comment('Copying resources')
         for res_name in self.resources:
-            res_path = os.path.join(cst.PATH_RES_DIR, res_name)
+            res_path = os.path.join(PATH_RES_DIR, res_name)
             self.write_df_line('COPY ' + res_path + ' /build')
         self.write_df_newline()
 
@@ -173,7 +177,7 @@ class Package(object):
     def write_build_dockerfile(self, df_file):
         self.dockerfile = df_file
         self.write_df_deps_base_part()
-        self.write_df_base_part(image.get_base_image_name())
+        self.write_df_base_part(get_base_image_name())
         self.write_df_bring_deps_files()
         self.write_df_copy_res_part()
         self.write_df_prep_part()
@@ -187,20 +191,20 @@ class Package(object):
         self.dockerfile = df_file
 
         # Packaging files
-        self.write_df_base_part(image.get_package_image_name(self.package_name), build_files_stage_name)
-        self.write_df_line('COPY '+cst.PATH_TMP_CONTENTS_FILE+' '+cst.PATH_TMP_CONTENTS_FILE)
-        self.write_df_line('RUN mkdir -p '+cst.RELEASE_DIRECTORY)
+        self.write_df_base_part(get_package_image_name(self.package_name), build_files_stage_name)
+        self.write_df_line('COPY '+PATH_TMP_CONTENTS_FILE+' '+PATH_TMP_CONTENTS_FILE)
+        self.write_df_line('RUN mkdir -p '+RELEASE_DIRECTORY)
         if contents_list:
             if subpkg_name == 'bin':
                 # Try to strip binaries automatically
-                self.write_df_line('RUN while read p; do strip "$p" || true; done < '+cst.PATH_TMP_CONTENTS_FILE)
-            self.write_df_line('RUN while read p; do cp --parents -r "$p" '+cst.RELEASE_DIRECTORY+'; done < '+cst.PATH_TMP_CONTENTS_FILE)
-            self.write_df_line('RUN find '+cst.RELEASE_DIRECTORY+' -exec touch -h -t '+self.release_date+r' {} \;')
-        self.write_df_line('RUN rm '+cst.PATH_TMP_CONTENTS_FILE)
+                self.write_df_line('RUN while read p; do strip "$p" || true; done < '+PATH_TMP_CONTENTS_FILE)
+            self.write_df_line('RUN while read p; do cp --parents -r "$p" '+RELEASE_DIRECTORY+'; done < '+PATH_TMP_CONTENTS_FILE)
+            self.write_df_line('RUN find '+RELEASE_DIRECTORY+' -exec touch -h -t '+self.release_date+r' {} \;')
+        self.write_df_line('RUN rm '+PATH_TMP_CONTENTS_FILE)
 
         # Releasing
         self.write_df_base_part('scratch')
-        self.write_df_line('COPY --from='+build_files_stage_name+' '+cst.RELEASE_DIRECTORY+' /')
+        self.write_df_line('COPY --from='+build_files_stage_name+' '+RELEASE_DIRECTORY+' /')
         self.dockerfile.flush()
         self.dockerfile.close()
 
