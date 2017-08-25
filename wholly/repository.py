@@ -1,6 +1,5 @@
 import os
 import sys
-import image
 
 import yaml
 
@@ -12,6 +11,11 @@ from .constants import PATH_BUILD_BASE_DIR
 
 from .package import Package
 from .logconfig import logConfig
+
+from .image import get_package_image_name
+from .image import get_subpkg_hash
+from .image import build_docker_image
+from .image import get_base_image_name
 
 logger = logConfig(__name__)
 
@@ -42,10 +46,10 @@ class Repository(object):
                     # Check dep subpackages
                     rebuild_dep = False
                     for dep_sub in deps_subpkgs:
-                        img_name = image.get_package_image_name(dep_pkg_name, dep_sub)
+                        img_name = get_package_image_name(dep_pkg_name, dep_sub)
                         subpackages_contents = dep_pkg.get_subpackages_contents()
                         contents_file_hash = subpackages_contents[dep_sub]['checksum']
-                        real_img_hash = image.get_subpkg_hash(img_name)
+                        real_img_hash = get_subpkg_hash(img_name)
                         if contents_file_hash != real_img_hash:
                             rebuild_dep = True
 
@@ -99,11 +103,11 @@ class Repository(object):
         pkg_path = os.path.join(PATH_REPO_DIR, pkg_name)
         # Build package
         logger.info('Building package %s', pkg_name)
-        img_name = image.get_package_image_name(pkg_name)
+        img_name = get_package_image_name(pkg_name)
         df_filename = 'Dockerfile-'+img_name
         df_file = open(os.path.join(pkg_path, df_filename), 'w')
         pkg_obj.write_build_dockerfile(df_file)
-        image.build_docker_image(img_name, pkg_path, no_cache, df_filename, True)
+        build_docker_image(img_name, pkg_path, no_cache, df_filename, True)
 
         # Build subpackages
         is_err = False
@@ -111,7 +115,7 @@ class Repository(object):
         subpackages_contents = pkg_obj.get_subpackages_contents()
         for subpackage_name in subpackages_contents:
             logger.info('Building subpackage %s from package %s', subpackage_name, pkg_name)
-            img_name = image.get_package_image_name(pkg_name, subpackage_name)
+            img_name = get_package_image_name(pkg_name, subpackage_name)
             subpkg_contents = subpackages_contents[subpackage_name]['files']
             df_filename = 'Dockerfile-'+img_name
             df_file = open(os.path.join(pkg_path, df_filename), 'w')
@@ -127,14 +131,14 @@ class Repository(object):
             if subpkg_contents:
                 is_subpkg = True
             pkg_obj.write_subpackage_dockerfile(df_file, is_subpkg, subpackage_name)
-            image.build_docker_image(img_name, pkg_path, no_cache, df_filename, True)
+            build_docker_image(img_name, pkg_path, no_cache, df_filename, True)
 
             # Delete tmp files
             os.remove(tmp_contents_path)
 
             # Check hashes
             contents_file_hash = subpackages_contents[subpackage_name]['checksum']
-            real_img_hash = image.get_subpkg_hash(img_name)
+            real_img_hash = get_subpkg_hash(img_name)
             if contents_file_hash != real_img_hash:
                 if not commit_mode:
                     if not tolerant:
@@ -166,8 +170,8 @@ class Repository(object):
         logger.info('Building build base')
         df_path = os.path.join(PATH_BUILD_BASE_DIR, 'Dockerfile')
         if os.path.isfile(df_path):
-            img_name = image.get_base_image_name()
-            image.build_docker_image(img_name, PATH_BUILD_BASE_DIR, no_cache, 'Dockerfile', False)
+            img_name = get_base_image_name()
+            build_docker_image(img_name, PATH_BUILD_BASE_DIR, no_cache, 'Dockerfile', False)
         else:
             logger.error('No Dockerfile found into the %s directory. Aborting.', PATH_BUILD_BASE_DIR)
             sys.exit(1)
