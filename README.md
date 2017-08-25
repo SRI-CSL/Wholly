@@ -101,4 +101,4 @@ If one is building a package and one discovers that the checksums do not match, 
 
 - Use the `--commit-all` command switch, which will replace the old checksums by the new ones.
 
-- Use the `ignore-checksums` command switch, which will simply igmore the mismatches (while still reporting them).
+- Use the `--ignore-checksums` command switch, which will simply ignore the mismatches (while still reporting them).
