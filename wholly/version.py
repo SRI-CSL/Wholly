@@ -31,7 +31,7 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-# Freeping Creaturism:
+# Feeping Creaturism:
 #
 # this is the all important version number used by pip.
 #
@@ -41,7 +41,9 @@ Version History:
 
 1.0.0    - 8/25/2017 initial birth as a pip package.
 
+1.0.1    - 8/25/2017 initial birth as a pip package, now with added copyright protection.
+
 
 """
 
-wholly_version = '1.0.0'
+wholly_version = '1.0.1'

@@ -32,7 +32,7 @@ install:
 
 
 clean:
-	rm wholly/*.pyc
+	rm -rf build dist wholly.egg-info wholly/*.pyc
 
 
 PYLINT = $(shell which pylint)
