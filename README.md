@@ -105,4 +105,4 @@ If one is building a package and one discovers that the checksums do not match, 
 
 ---
 
-This material is based upon work supported by the National Science Foundation under Grant [ACI-1440800](http://www.nsf.gov/awardsearch/showAward?AWD_ID=1440800) and Department of Homeland Security (DHS) Science and Technology Directorate. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation.
+This material is based upon work supported by the National Science Foundation under Grant [ACI-1440800](http://www.nsf.gov/awardsearch/showAward?AWD_ID=1440800) and Department of Homeland Security (DHS) Science and Technology Directorate. Any opinions, findings, and conclusions or recommendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation, the Department of Homeland Security, or the US government.
